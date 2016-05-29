@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="Generator" content="EditPlus®">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+  <title>音乐播放器</title>
+  <style>
+	*{margin:0px;padding:0px;list-style:none;font-family:"微软雅黑";}
+	body{background:url(img/bg.jpg);background-size:100%;}
+	#main{width:400px;height:350px;background:url(img/bgm.jpg);margin:100px auto;border:1px solid #000;border-radius:10px;box-shadow:0px 0px 5px #000;}
+	#main .info{width:400px;height:150px;}
+	#main .list{width:400px;height:190px;}
+	#main .list ul li{list-style:none;font-size:14px;width:400px;height:35px;color:#fff;}
+	#main .list ul li span{display:inline-block;font-size:14px;width:150px;height:35px;color:#fff;line-height:35px;text-indent:25px;font-weight:200;float:left;
+	cursor:pointer;}
+	#main .list ul li.hover span{color:#cc0000;text-shadow:0px 0px 4px #000;background:url("img/le.png") 5px center no-repeat;}
+	#main .list ul li font{display:inline-block;font-size:12px;width:150px;height:35px;line-height:35px;float:right;color:#ddd;cursor:pointer;}
+	
+	#main .info .img{width:100px;height:100px;float:left;margin:25px;border-radius:10px;overflow:hidden;box-shadow:0px 0px 8px #000;}
+	#main .info .img img{width:100px;height:100px;}
+	#main .info .xq{width:230px;height:150px;float:right;}
+	#main .info .xq .tit{width:230px;height:70px;}
+	#main .info .xq .tit p.title{line-height:35px;font-size:16px;color:#fff;padding-top:15px;}
+	#main .info .xq .tit p.name{line-height:25px;font-size:12px;color:#cecece;}
+	#main .info .control{height:30px;width:230px;}
+	#main .info .control .btn{width:100px;height:30px;float:left;}
+	#main .info .control .btn div{width:16px;height:16px;margin-top:7px;float:left;margin-right:13px;cursor:pointer;}
+	#main .info .control .slideVolume{width:120px;height:30px;float:left;}
+	#main .info .control .slideVolume .pic{width:16px;height:16px;margin-top:7px;float:left;}
+	#main .info .control .slideVolume .bBar{width:70px;height:5px;background:#000;float:left;margin-top:14px;margin-left:5px;border-radius:5px;}
+	#main .info .control .slideVolume .sBar{width:0px;height:5px;background:#900;box-shadow:0px 0px 1px #ddd;border-radius:5px;}
+	#main .info #slideTime{width:220px;height:5px;background:#000;margin-top:10px;border-radius:5px;}
+	#main .info .slideBar{width:0px;height:5px;border-radius:5px;background:#990000;box-shadow:0px 0px 1px #ddd;}
+	#main .info #slideTime p{font-size:xx-small;color:#fff;}
+	.hr{width:400px;height:3px; box-shadow:0px 0px 3px #333;background:#000}
+  </style>
+ </head>
+ <body>
+  <div id="main">
+	<div class="info">
+		<div class="img"><img src="img/zxz.jpg" alt=""></div>
+		<div class="xq">
+			<div class="tit">
+				<p class="title"></p>
+				<p class="name"></p>
+			</div>
+			<div class="control">
+				<div class="btn">
+					<div class="prev"><img src="img/prev.png" alt=""></div>
+					<div class="play"><img src="img/play.png" alt=""></div>
+					<div class="next"><img src="img/next.png" alt=""></div>
+				</div>
+				<div class="slideVolume">
+					<div class="pic"><img src="img/volume.png" alt=""></div>
+					<div class="bBar">
+						<div class="sBar"></div>
+					</div>
+				</div>
+			</div>
+			<div id="slideTime">
+				<div class="slideBar"></div>
+				<p></p>
+			</div>
+		</div>
+	</div>
+	<div class="hr"></div>
+	<div class="list">
+		<ul>
+		</ul>
+	</div>
+  </div>
+  <script src="js/jquery.js"></script>
+  <script>
+	var mArr=[
+	{"title":"别怕我伤心","name":"张信哲","url":"music/bpwsx.mp3","src":"img/zxz.jpg"},
+	{"title":"冬天的秘密","name":"周传雄","url":"music/dtdmm.mp3","src":"img/zcx.jpg"},
+	{"title":"记事本","name":"陈慧琳","url":"music/jsb.mp3","src":"img/chl.jpg"},
+	{"title":"我真的受伤了","name":"张学友","url":"music/wzdssl.mp3","src":"img/zxy.jpg"},
+	{"title":"一剪梅","name":"费玉清","url":"music/yjm.mp3","src":"img/zxz.jpg","src":"img/fyq.jpg"}
+	];
+	for(var i=0;i<mArr.length;i++){
+		$(".list ul").append("<li><span>"+mArr[i].title+"</span><font>"+mArr[i].name+"</font></li>")
+	}
+	var song=null;
+	var duration=null;
+	var curTime=null;
+	var percent;
+	var volume;
+	function audio(i){
+		var url=mArr[i].url;
+		song=new Audio(url);
+		var src=mArr[i].src
+		$(".info .img img").attr("src",src);
+		var title=mArr[i].title;
+		var name=mArr[i].name;
+		$("p.title").html(title);
+		$("p.name").html(name);
+		$(".list ul li").eq(i).addClass("hover").siblings().removeClass("hover");
+		song.addEventListener("timeupdate",function(){
+			curTime=song.currentTime;
+			duration=song.duration;
+			percent=curTime/duration;
+			$(".slideBar").css({"width":percent*220});
+			$("#slideTime p").html(timeSet(curTime));
+			if(song.ended){
+				stop();
+			}
+		},false);
+
+	}
+	function play(){
+		$(".play img").attr("src","img/pause.png");
+		song.play();
+	}
+	function stop(){	
+		song.pause();
+		$(".play img").attr("src","img/play.png");
+	}
+	
+	$(".list ul li:first").addClass("hover");
+	var i=0;
+	var flag=0;
+	$(".list ul li").on("click",function(){
+		i=$(this).index();
+		stop();
+		audio(i);
+		play();
+		flag=1;
+	})
+	audio(0);	
+	$(".play").on("click",function(){
+		if(flag==0){			
+			play();
+			flag=1;
+		}else if(flag==1){
+			stop();
+			flag=0;
+		}
+	})
+
+	$(".prev").on("click",function(){
+		i=$(".list ul li.hover").index();
+		stop();
+		if(i==0){
+			i=$(".list ul li").length-1;
+			audio(i);
+			play();
+		}else{
+			i-=1;
+			audio(i);
+			play();
+		}
+		flag=1;
+	})
+	
+	$(".next").on("click",function(){
+		i=$(".list ul li.hover").index();
+		stop();
+		if(i==($(".list ul li").length-1)){
+			i=0;
+			audio(i);
+			play();
+		}else{
+			i+=1;
+			audio(i);
+			play();
+		}
+		flag=1;
+	})
+
+	//声音设置
+	song.muted=false;
+	var v=song.volume;
+	$(".sBar").css({"width":v*70});
+	$(".pic img").click(function(){
+		if(song.muted==true){
+			song.muted=false;
+			v=song.volume;
+			$(".sBar").css("width",v*70+"px");
+			$(".pic img").attr("src","img/volume.png");
+		}else if(song.muted==false){
+			song.muted=true;
+			$(".sBar").css("width",0);
+			$(".pic img").attr("src","img/jing.png");
+		}
+	})
+	//点击进度条快进
+	$("#slideTime").mousedown(function(e){
+		updateBar(e.clientX);
+		$(document).mousemove(function(e){
+			updateBar(e.clientX);
+		});
+		$(document).mouseup(function(e){
+			$(document).unbind();
+		})
+		return false;
+	})
+	function updateBar(x){
+				var slide=$("#slideTime");
+				var maxduration=song.duration;
+				var position=x-slide.offset().left;
+				var percent=position/slide.width();
+				if(percent>1){
+					percent=1
+				}else if(percent<0){
+					percent=0;
+				}
+				$(".slideBar").css("width",percent*220);
+				song.currentTime=maxduration*percent;
+			}
+
+	$(".bBar").on("mousedown",function(e){
+				var position=e.clientX-$(this).offset().left;
+				var percent=100*position/$(this).width();
+				$(".sBar").css("width",percent+"%");
+				song.volume=percent/100;
+				
+				if(song.volume==0){
+					song.muted=true;
+					$(".sBar").css("width",0);
+					$(".pic img").attr("src","img/jing.png");
+				}else if(song.volume>0){
+					song.muted=false;
+					v=song.volume;
+				$(".sBar").css("width",v*70+"px");
+				$(".pic img").attr("src","img/volume.png");
+				}
+			})
+	//时间格式转换
+	function timeSet(value){
+				var seconds=parseInt(value);
+				var minutes=0;
+				if(seconds>60){
+					minutes=parseInt(seconds/60);
+					seconds=parseInt(seconds%60);
+				}
+				seconds=seconds+"";
+				seconds=seconds.length<2?"0"+seconds:seconds;
+				minutes=minutes+"";
+				minutes=minutes.length<2?"0"+minutes:minutes;
+				var result=minutes+":"+seconds;
+				return result;
+			}
+  </script>
+ </body>
+</html>
